@@ -1,0 +1,71 @@
+# Docker Compose — Environnement de développement
+# Commande : docker compose -f docker-compose.dev.yml up
+
+name: conduit-dev
+
+services:
+  # ─── Base de données PostgreSQL ───────────────────────
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: conduit
+      POSTGRES_PASSWORD: conduit_dev_password
+      POSTGRES_DB: conduit_db
+    ports:
+      - "5432:5432"    # Accessible depuis ton IDE (ex: TablePlus)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data    # Données persistantes
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conduit -d conduit_db"]  # ← ajoute -d conduit_db
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend NestJS ────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: base    # On s'arrête au stage BASE (pas de build prod)
+    command: pnpm --filter=api dev    # NestJS en mode watch
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://conduit:conduit_dev_password@db:5432/conduit_db
+      JWT_SECRET: dev_jwt_secret_change_in_prod
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    volumes:
+      # Bind mount : ton code local = code dans le conteneur (hot-reload)
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      # Évite d'écraser le node_modules du conteneur
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    depends_on:
+      db:
+        condition: service_healthy    # Attend que Postgres soit prêt
+
+  # ─── Frontend Next.js ──────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: base    # Stage BASE uniquement
+    command: pnpm --filter=web dev
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web:/app/apps/web
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next    # Cache Next.js persistant
+    depends_on:
+      - api
+
+# ─── Volumes nommés ─────────────────────────────────────
+volumes:
+  postgres_data:    # Données PostgreSQL survivent aux redémarrages
