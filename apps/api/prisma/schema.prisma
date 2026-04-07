@@ -1,0 +1,97 @@
+// Configuration du générateur de client TypeScript
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// ─── Modèles ────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())  // cuid = ID unique lisible
+  email     String   @unique
+  username  String   @unique
+  password  String   // bcrypt — JAMAIS renvoyé dans une réponse API
+  bio       String?  // ? = nullable, champ optionnel
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt  // mis à jour automatiquement par Prisma
+
+  // Relations (champs virtuels — non stockés en base)
+  articles  Article[]
+  comments  Comment[]
+  favorites Favorite[]
+  following Follow[]   @relation("follower")
+  followers Follow[]   @relation("following")
+}
+
+model Article {
+  id          String   @id @default(cuid())
+  slug        String   @unique  // ex: "my-article-title-abc123"
+  title       String
+  description String
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Clé étrangère vers User
+  authorId  String
+  author    User         @relation(fields: [authorId], references: [id])
+
+  // Relations
+  comments  Comment[]
+  favorites Favorite[]
+  tags      ArticleTag[]  // table de jonction Many-to-Many
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique  // ex: "javascript", "nestjs"
+  articles ArticleTag[]
+}
+
+// Table de jonction Article <-> Tag (relation Many-to-Many explicite)
+model ArticleTag {
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id])
+  tagId     String
+  tag       Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([articleId, tagId])  // clé primaire composite : une paire unique
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId  String
+  author    User    @relation(fields: [authorId], references: [id])
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id])
+}
+
+// Table de jonction User <-> Article (favoris)
+model Favorite {
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id])
+
+  @@id([userId, articleId])  // un utilisateur ne peut favoriter qu'une fois
+}
+
+// Table de jonction User <-> User (follows)
+model Follow {
+  followerId  String
+  follower    User   @relation("follower", fields: [followerId], references: [id])
+  followingId String
+  following   User   @relation("following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])  // empêche le double-follow
+}
