@@ -1,15 +1,17 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
 
 @Injectable()
-// PrismaClient contient toutes les méthodes : prisma.user, prisma.article, etc.
-// OnModuleInit : NestJS appelle onModuleInit() automatiquement au démarrage
 export class PrismaService extends PrismaClient implements OnModuleInit {
-  async onModuleInit(): Promise<void> {
-    // Ouvre la connexion à PostgreSQL au démarrage de l'application
+  constructor() {
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL,
+    });
+    super({ adapter } as never); // `as never` — conflit de types connu avec le client custom
+  }
 
+  async onModuleInit(): Promise<void> {
     await this.$connect();
   }
-  // NestJS gère la fermeture propre via enableShutdownHooks() dans main.ts
-  // Pas besoin de gérer onModuleDestroy manuellement avec les versions récentes
 }
