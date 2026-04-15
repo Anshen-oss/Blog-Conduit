@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { CommentsModule } from './comments/comments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfilesModule } from './profiles/profiles.module';
+import { TagsModule } from './tags/tags.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module';
     ProfilesModule,
     ArticlesModule,
     CommentsModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
