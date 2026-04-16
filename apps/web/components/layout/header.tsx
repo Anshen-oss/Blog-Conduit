@@ -2,14 +2,15 @@
 // Server Component (pas de 'use client' nécessaire ici)
 
 import { getCurrentUser } from '@/lib/api';
-import { getToken } from '@/lib/auth';
+import { getAuthToken } from '@/lib/auth';
+
 import type { User } from '@/types';
 import Link from 'next/link';
 
 export async function Header() {
   // On récupère l'utilisateur courant côté serveur pour afficher
   // les bons liens (connecté vs déconnecté)
-  const token = await getToken();
+  const token = await getAuthToken();
   let user: User | null = null;
 
   if (token) {

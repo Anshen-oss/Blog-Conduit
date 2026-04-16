@@ -2,12 +2,26 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
-// Options de base pour toutes les requêtes
-interface FetchOptions extends RequestInit {
-  token?: string; // JWT optionnel à passer en Authorization header
+// ─── Classe d'erreur structurée ───────────────────────────────────────────────
+// Le backend du Blog renvoie { errors: { field: ["message"] } }
+// On conserve cette structure pour afficher les erreurs dans les formulaires
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public errors: Record<string, string[]>,
+  ) {
+    super(`API Error ${status}`);
+    this.name = 'ApiError';
+  }
 }
 
-// Fonction utilitaire interne — wrapping du fetch natif
+// ─── Client HTTP interne ──────────────────────────────────────────────────────
+
+interface FetchOptions extends RequestInit {
+  token?: string;
+}
+
 async function apiFetch<T>(
   endpoint: string,
   options: FetchOptions = {},
@@ -16,7 +30,8 @@ async function apiFetch<T>(
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    // ⚠️ Conduit spec impose "Token xxx" — pas "Bearer xxx"
+    ...(token ? { Authorization: `Token ${token}` } : {}),
     ...fetchOptions.headers,
   };
 
@@ -26,10 +41,11 @@ async function apiFetch<T>(
   });
 
   if (!response.ok) {
-    // On parse le body d'erreur pour propager un message clair
     const error = await response.json().catch(() => ({}));
-    throw new Error(
-      (error as { message?: string }).message ?? `HTTP ${response.status}`,
+    // On propage la structure { errors } pour les formulaires
+    throw new ApiError(
+      response.status,
+      (error as { errors?: Record<string, string[]> }).errors ?? {},
     );
   }
 
@@ -39,36 +55,6 @@ async function apiFetch<T>(
   }
 
   return response.json() as Promise<T>;
-}
-
-// ─── Articles ────────────────────────────────────────────────────────────────
-
-export async function getArticles(
-  params: Record<string, string | number> = {},
-  token?: string,
-) {
-  const query = new URLSearchParams(
-    Object.fromEntries(
-      Object.entries(params).map(([k, v]) => [k, String(v)]),
-    ),
-  ).toString();
-
-  const endpoint = `/articles${query ? `?${query}` : ''}`;
-  return apiFetch(endpoint, { token });
-}
-
-export async function getArticle(slug: string, token?: string) {
-  return apiFetch(`/articles/${slug}`, { token });
-}
-
-export async function getFeed(token: string) {
-  return apiFetch('/articles/feed', { token });
-}
-
-// ─── Tags ─────────────────────────────────────────────────────────────────────
-
-export async function getTags() {
-  return apiFetch<{ tags: string[] }>('/tags');
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -106,7 +92,37 @@ export async function updateUser(
   });
 }
 
-// ─── Profils ─────────────────────────────────────────────────────────────────
+// ─── Articles ─────────────────────────────────────────────────────────────────
+
+export async function getArticles(
+  params: Record<string, string | number> = {},
+  token?: string,
+) {
+  const query = new URLSearchParams(
+    Object.fromEntries(
+      Object.entries(params).map(([k, v]) => [k, String(v)]),
+    ),
+  ).toString();
+
+  const endpoint = `/articles${query ? `?${query}` : ''}`;
+  return apiFetch(endpoint, { token });
+}
+
+export async function getArticle(slug: string, token?: string) {
+  return apiFetch(`/articles/${slug}`, { token });
+}
+
+export async function getFeed(token: string) {
+  return apiFetch('/articles/feed', { token });
+}
+
+// ─── Tags ─────────────────────────────────────────────────────────────────────
+
+export async function getTags() {
+  return apiFetch<{ tags: string[] }>('/tags');
+}
+
+// ─── Profils ──────────────────────────────────────────────────────────────────
 
 export async function getProfile(username: string, token?: string) {
   return apiFetch(`/profiles/${username}`, { token });
