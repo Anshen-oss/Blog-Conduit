@@ -14,9 +14,10 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@conduit/typescript-config": "workspace:*",
     "@conduit/eslint-config": "workspace:*",
+    "@conduit/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
