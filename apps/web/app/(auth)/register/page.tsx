@@ -1,4 +1,9 @@
-// Page de register — placeholder en attendant feature/10
+import { type Metadata } from 'next'
+import { RegisterForm } from './register-form'
+
+export const metadata: Metadata = {
+  title: 'Sign Up — Conduit',
+}
 
 export default function RegisterPage() {
   return (
@@ -6,13 +11,17 @@ export default function RegisterPage() {
       <div className="container page">
         <div className="row">
           <div className="col-md-6 offset-md-3 col-xs-12">
+
             <h1 className="text-xs-center">Sign up</h1>
             <p className="text-xs-center">
-              Register form will appear here (feature/10)
+              <a href="/login">Have an account?</a>
             </p>
+
+            <RegisterForm />
+
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
