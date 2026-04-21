@@ -62,7 +62,7 @@ async function apiFetch<T>(
 export async function login(email: string, password: string) {
   return apiFetch('/users/login', {
     method: 'POST',
-    body: JSON.stringify({ user: { email, password } }),
+    body: JSON.stringify({ email, password }),
   });
 }
 
@@ -73,12 +73,14 @@ export async function register(
 ) {
   return apiFetch('/users', {
     method: 'POST',
-    body: JSON.stringify({ user: { username, email, password } }),
+    body: JSON.stringify({ username, email, password }),
   });
 }
 
 export async function getCurrentUser(token: string) {
-  return apiFetch('/user', { token });
+    return apiFetch('/user', {
+    headers: { Cookie: `jwt=${token}` },  // ← cookie au lieu de Authorization
+  });
 }
 
 export async function updateUser(
@@ -116,6 +118,17 @@ export async function getFeed(token: string) {
   return apiFetch('/articles/feed', { token });
 }
 
+export async function getArticlesFeed(
+  token: string,
+  params: { limit?: number; offset?: number } = {},
+) {
+  const qs = new URLSearchParams();
+  qs.set('limit', String(params.limit ?? 10));
+  qs.set('offset', String(params.offset ?? 0));
+
+  return apiFetch(`/articles/feed?${qs.toString()}`, { token });
+}
+
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 
 export async function getTags() {
@@ -126,4 +139,26 @@ export async function getTags() {
 
 export async function getProfile(username: string, token?: string) {
   return apiFetch(`/profiles/${username}`, { token });
+}
+
+// ─── Favoris ──────────────────────────────────────────────────────────────────
+
+export async function favoriteArticle(slug: string, token: string) {
+  return apiFetch(`/articles/${slug}/favorite`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export async function unfavoriteArticle(slug: string, token: string) {
+  return apiFetch(`/articles/${slug}/favorite`, {
+    method: 'DELETE',
+    token,
+  });
+}
+
+// ─── Commentaires ─────────────────────────────────────────────────────────────
+
+export async function getComments(slug: string, token?: string) {
+  return apiFetch(`/articles/${slug}/comments`, { token });
 }

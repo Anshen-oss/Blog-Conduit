@@ -21,6 +21,7 @@ export async function loginAction(
     const data = await login(email, password) as { user: ConduitUser }
     await setAuthCookie(data.user.token)
   } catch (error) {
+    console.error('LOGIN ERROR:', error)
     if (error instanceof ApiError) {
       return { errors: error.errors }
     }
