@@ -1,2 +1,3 @@
 /* Styles globaux — la CSS de Conduit est chargée depuis le CDN dans layout.tsx */
 /* Ce fichier est intentionnellement minimal */
+@import './conduit.css';

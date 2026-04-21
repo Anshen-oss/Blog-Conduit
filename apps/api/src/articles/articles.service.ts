@@ -155,6 +155,11 @@ export class ArticlesService {
       throw new ForbiddenException("Seul l'auteur peut supprimer cet article");
     }
 
+    // Supprimer les relations ArticleTag d'abord (contrainte FK)
+    await this.prisma.articleTag.deleteMany({
+      where: { articleId: article.id },
+    });
+
     await this.prisma.article.delete({ where: { slug } });
     this.logger.log(`Article supprimé : ${slug}`);
   }
