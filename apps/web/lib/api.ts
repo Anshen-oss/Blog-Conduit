@@ -77,10 +77,18 @@ export async function register(
   });
 }
 
-export async function getCurrentUser(token: string) {
-    return apiFetch('/user', {
-    headers: { Cookie: `jwt=${token}` },  // ← cookie au lieu de Authorization
-  });
+export interface UserResponse {
+  user: {
+    email: string
+    username: string
+    bio: string | null
+    image: string | null
+    token: string
+  }
+}
+
+export async function getCurrentUser(token: string): Promise<UserResponse> {
+  return apiFetch<UserResponse>('/user', { token }) // ← token, pas headers manuel
 }
 
 export async function updateUser(
@@ -96,22 +104,44 @@ export async function updateUser(
 
 // ─── Articles ─────────────────────────────────────────────────────────────────
 
+export interface Article {
+  slug: string
+  title: string
+  description: string
+  body: string
+  tagList: string[]
+  createdAt: string
+  updatedAt: string
+  favorited: boolean
+  favoritesCount: number
+  author: Profile
+}
+
+export interface ArticlesResponse {
+  articles: Article[]
+  articlesCount: number
+}
+
 export async function getArticles(
   params: Record<string, string | number> = {},
   token?: string,
-) {
+): Promise<ArticlesResponse> {
   const query = new URLSearchParams(
     Object.fromEntries(
       Object.entries(params).map(([k, v]) => [k, String(v)]),
     ),
-  ).toString();
+  ).toString()
 
-  const endpoint = `/articles${query ? `?${query}` : ''}`;
-  return apiFetch(endpoint, { token });
+  const endpoint = `/articles${query ? `?${query}` : ''}`
+  return apiFetch<ArticlesResponse>(endpoint, { token })
 }
 
-export async function getArticle(slug: string, token?: string) {
-  return apiFetch(`/articles/${slug}`, { token });
+export interface ArticleResponse {
+  article: Article
+}
+
+export async function getArticle(slug: string, token?: string): Promise<ArticleResponse> {
+  return apiFetch<ArticleResponse>(`/articles/${slug}`, { token })
 }
 
 export async function getFeed(token: string) {
@@ -121,24 +151,18 @@ export async function getFeed(token: string) {
 export async function getArticlesFeed(
   token: string,
   params: { limit?: number; offset?: number } = {},
-) {
-  const qs = new URLSearchParams();
-  qs.set('limit', String(params.limit ?? 10));
-  qs.set('offset', String(params.offset ?? 0));
+): Promise<ArticlesResponse> {
+  const qs = new URLSearchParams()
+  qs.set('limit', String(params.limit ?? 10))
+  qs.set('offset', String(params.offset ?? 0))
 
-  return apiFetch(`/articles/feed?${qs.toString()}`, { token });
+  return apiFetch<ArticlesResponse>(`/articles/feed?${qs.toString()}`, { token })
 }
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 
 export async function getTags() {
   return apiFetch<{ tags: string[] }>('/tags');
-}
-
-// ─── Profils ──────────────────────────────────────────────────────────────────
-
-export async function getProfile(username: string, token?: string) {
-  return apiFetch(`/profiles/${username}`, { token });
 }
 
 // ─── Favoris ──────────────────────────────────────────────────────────────────
@@ -159,6 +183,59 @@ export async function unfavoriteArticle(slug: string, token: string) {
 
 // ─── Commentaires ─────────────────────────────────────────────────────────────
 
-export async function getComments(slug: string, token?: string) {
-  return apiFetch(`/articles/${slug}/comments`, { token });
+export interface Comment {
+  id: number
+  body: string
+  createdAt: string
+  updatedAt: string
+  author: Profile
+}
+
+export interface CommentsResponse {
+  comments: Comment[]
+}
+
+export async function getComments(slug: string, token?: string): Promise<CommentsResponse> {
+  return apiFetch<CommentsResponse>(`/articles/${slug}/comments`, { token })
+}
+
+// ─── Profils ─────────────────────────────────────────────────────────────────
+
+export interface Profile {
+  username: string
+  bio: string | null
+  image: string | null
+  following: boolean
+}
+
+export interface ProfileResponse {
+  profile: Profile
+}
+
+/** GET /api/profiles/:username — public */
+export async function getProfile(username: string, token?: string): Promise<Profile> {
+  const data = await apiFetch<ProfileResponse>(`/profiles/${username}`, {
+    token,
+    // Pas de cache — le statut "following" dépend de l'utilisateur connecté
+    cache: 'no-store',
+  })
+  return data.profile
+}
+
+/** POST /api/profiles/:username/follow — auth requise */
+export async function followUser(username: string, token: string): Promise<Profile> {
+  const data = await apiFetch<ProfileResponse>(`/profiles/${username}/follow`, {
+    method: 'POST',
+    token,
+  })
+  return data.profile
+}
+
+/** DELETE /api/profiles/:username/follow — auth requise */
+export async function unfollowUser(username: string, token: string): Promise<Profile> {
+  const data = await apiFetch<ProfileResponse>(`/profiles/${username}/follow`, {
+    method: 'DELETE',
+    token,
+  })
+  return data.profile
 }
