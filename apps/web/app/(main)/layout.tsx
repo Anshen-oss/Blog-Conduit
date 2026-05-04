@@ -1,5 +1,6 @@
 // Layout pour toutes les pages "principales"
 // Applique automatiquement Header + Footer à homepage, articles, profils, etc.
+export const dynamic = 'force-dynamic'
 
 import { Footer } from '@/components/layout/footer';
 import { Header } from '@/components/layout/header';

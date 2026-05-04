@@ -122,7 +122,6 @@ export class ArticlesService {
       throw new NotFoundException(`Article "${slug}" introuvable`);
     }
 
-    // Seul l'auteur peut modifier son article
     if (article.authorId !== currentUserId) {
       throw new ForbiddenException("Seul l'auteur peut modifier cet article");
     }
@@ -130,13 +129,26 @@ export class ArticlesService {
     const updated = await this.prisma.article.update({
       where: { slug },
       data: {
-        // Regénérer le slug uniquement si le titre change
         ...(dto.title && {
           title: dto.title,
           slug: this.generateSlug(dto.title),
         }),
         ...(dto.description && { description: dto.description }),
         ...(dto.body && { body: dto.body }),
+        // ← ajout de la gestion des tags
+        ...(dto.tagList && {
+          tags: {
+            deleteMany: {}, // supprime tous les anciens tags
+            create: dto.tagList.map((name) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { name },
+                  create: { name },
+                },
+              },
+            })),
+          },
+        }),
       },
       include: articleInclude,
     });

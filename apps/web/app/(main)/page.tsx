@@ -1,10 +1,10 @@
 // Server Component async — toute la logique de fetch est ici
 // Pas de useState, pas de useEffect : on fetch directement
 
+import { ArticleCard } from '@/components/articles/article-card';
+import { getArticles, getArticlesFeed, getTags } from '@/lib/api';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { getArticles, getArticlesFeed, getTags } from '@/lib/api';
-import { ArticleCard } from '@/components/articles/article-card';
 
 interface HomePageProps {
   searchParams: Promise<{
@@ -27,7 +27,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const [articlesData, tagsData] = await Promise.all([
     feed && token
       ? getArticlesFeed(token, { limit, offset })
-      : getArticles({ tag, limit, offset }),
+      //Le ...(tag && { tag }) signifie : "ajoute la propriété tag seulement si elle existe".
+      // Si tag est undefined, on ne l'inclut pas du tout dans l'objet.
+      : getArticles({ ...(tag && { tag }), limit, offset }),
     getTags(),
   ]);
 

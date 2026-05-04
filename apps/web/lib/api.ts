@@ -31,7 +31,7 @@ async function apiFetch<T>(
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     // ⚠️ Conduit spec impose "Token xxx" — pas "Bearer xxx"
-    ...(token ? { Authorization: `Token ${token}` } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...fetchOptions.headers,
   };
 
@@ -40,14 +40,26 @@ async function apiFetch<T>(
     headers,
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    // On propage la structure { errors } pour les formulaires
-    throw new ApiError(
-      response.status,
-      (error as { errors?: Record<string, string[]> }).errors ?? {},
-    );
+if (!response.ok) {
+  const error = await response.json().catch(() => ({}))
+  const body = error as {
+    errors?: Record<string, string[]>
+    message?: string | string[]
   }
+
+  let errors: Record<string, string[]> = {}
+
+  if (body.errors) {
+    // Format Conduit : { errors: { email: ["is taken"] } }
+    errors = body.errors
+  } else if (body.message) {
+    // Format NestJS : { message: ["email invalide", ...] }
+    const messages = Array.isArray(body.message) ? body.message : [body.message]
+    errors = { '': messages }
+  }
+
+  throw new ApiError(response.status, errors)
+}
 
   // 204 No Content (ex: DELETE) ne renvoie pas de body
   if (response.status === 204) {
@@ -88,7 +100,7 @@ export interface UserResponse {
 }
 
 export async function getCurrentUser(token: string): Promise<UserResponse> {
-  return apiFetch<UserResponse>('/user', { token }) // ← token, pas headers manuel
+  return apiFetch<UserResponse>('/user', { token, cache: 'no-store' })
 }
 
 export async function updateUser(
@@ -151,12 +163,12 @@ export async function getFeed(token: string) {
 export async function getArticlesFeed(
   token: string,
   params: { limit?: number; offset?: number } = {},
-): Promise<ArticlesResponse> {
-  const qs = new URLSearchParams()
-  qs.set('limit', String(params.limit ?? 10))
-  qs.set('offset', String(params.offset ?? 0))
+) {
+  const qs = new URLSearchParams();
+  qs.set('limit', String(params.limit ?? 10));
+  qs.set('offset', String(params.offset ?? 0));
 
-  return apiFetch<ArticlesResponse>(`/articles/feed?${qs.toString()}`, { token })
+  return apiFetch(`/articles/feed?${qs.toString()}`, { token });
 }
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
