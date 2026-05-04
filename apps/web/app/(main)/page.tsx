@@ -3,7 +3,7 @@
 
 import { ArticleCard } from '@/components/articles/article-card';
 import { getArticles, getArticlesFeed, getTags } from '@/lib/api';
-import { cookies } from 'next/headers';
+import { getAuthToken } from '@/lib/auth';
 import Link from 'next/link';
 
 interface HomePageProps {
@@ -20,8 +20,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const limit = 10;
 
   // Lire le JWT pour savoir si l'utilisateur est connecté
-  const cookieStore = await cookies();
-  const token = cookieStore.get('jwt')?.value;
+   const token = await getAuthToken();
 
   // Fetch articles et tags en parallèle — plus rapide
   const [articlesData, tagsData] = await Promise.all([
