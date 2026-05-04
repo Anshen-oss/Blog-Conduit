@@ -1,9 +1,9 @@
 // Server Component — pas de 'use client' nécessaire
 // Affiche un article en mode résumé (sans le body complet)
 
-import Link from 'next/link';
-import Image from 'next/image';
 import type { Article } from '@/types';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface ArticleCardProps {
   article: Article;
@@ -22,7 +22,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
       <div className="article-meta">
         <Link href={`/profile/${article.author.username}`}>
           <Image
-            src={article.author.image ?? 'https://api.realworld.io/images/smiley-cyrus.jpg'}
+            src={article.author.image ?? 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
             alt={article.author.username}
             width={32}
             height={32}

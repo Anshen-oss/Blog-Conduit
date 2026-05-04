@@ -3,6 +3,7 @@
 
 import { getCurrentUser } from '@/lib/api';
 import { getAuthToken } from '@/lib/auth';
+import { LogoutButton } from './logout-button';
 
 import type { User } from '@/types';
 import Link from 'next/link';
@@ -13,16 +14,14 @@ export async function Header() {
   const token = await getAuthToken();
   let user: User | null = null;
 
-  if (token) {
-    try {
-      // L'API renvoie { user: {...} } selon la spec Conduit
-      const data = await getCurrentUser(token) as { user: User };
-      user = data.user;
-    } catch {
-      // Token expiré ou invalide — on traite l'utilisateur comme déconnecté
-      user = null;
-    }
+if (token) {
+  try {
+    const data = await getCurrentUser(token) as { user: User }// ← ajoute cette ligne
+    user = data.user
+  } catch {
+    user = null
   }
+}
 
   return (
     <nav className="navbar navbar-light">
@@ -66,6 +65,9 @@ export async function Header() {
                   )}
                   {user.username}
                 </Link>
+              </li>
+              <li className="nav-item">
+                <LogoutButton />
               </li>
             </>
           ) : (

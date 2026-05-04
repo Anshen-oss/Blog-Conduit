@@ -13,8 +13,8 @@ export class UpdateArticleDto {
   @IsString()
   body?: string;
 
-  @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @IsOptional()
   tagList?: string[];
 }

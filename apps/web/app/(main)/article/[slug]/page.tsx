@@ -14,7 +14,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
 
   // Lire le cookie JWT
-  const token = await getAuthToken();
+const token = await getAuthToken();
 
   // Fetch article + commentaires + user courant en parallèle
 const [articleData, commentsData, currentUser] = await Promise.all([
@@ -44,7 +44,7 @@ const [articleData, commentsData, currentUser] = await Promise.all([
           <div className="article-meta">
             <Link href={`/profile/${article.author.username}`}>
               <Image
-                src={article.author.image ?? 'https://api.realworld.io/images/smiley-cyrus.jpg'}
+                src={article.author.image ?? 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
                 alt={article.author.username}
                 width={32}
                 height={32}
