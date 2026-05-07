@@ -1,92 +1,53 @@
-// Header de Conduit — navigation principale
-// Server Component (pas de 'use client' nécessaire ici)
-
-import { getCurrentUser } from '@/lib/api';
-import { getAuthToken } from '@/lib/auth';
-import { LogoutButton } from './logout-button';
-
-import type { User } from '@/types';
 import Link from 'next/link';
 
-export async function Header() {
-  // On récupère l'utilisateur courant côté serveur pour afficher
-  // les bons liens (connecté vs déconnecté)
-  const token = await getAuthToken();
-  let user: User | null = null;
-
-if (token) {
-  try {
-    const data = await getCurrentUser(token) as { user: User }// ← ajoute cette ligne
-    user = data.user
-  } catch {
-    user = null
-  }
+interface HeaderProps {
+  username?: string | null // null = non connecté
 }
 
+export function Header({ username }: HeaderProps) {
   return (
-    <nav className="navbar navbar-light">
-      <div className="container">
-        {/* Logo Conduit — lien vers l'accueil */}
-        <Link className="navbar-brand" href="/">
-          Blog Anshen
+    <nav className="border-b border-conduit-border bg-white">
+      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+        {/* Logo */}
+        <Link
+          href="/"
+          className="text-brand font-bold text-xl tracking-tight hover:text-brand-hover transition-colors"
+        >
+          conduit
         </Link>
 
-        <ul className="nav navbar-nav pull-xs-right">
-          <li className="nav-item">
-            <Link className="nav-link" href="/">
-              Home
-            </Link>
-          </li>
+        {/* Navigation */}
+        <ul className="flex items-center gap-1">
+          <NavLink href="/">Home</NavLink>
 
-          {user ? (
-            // Navigation connectée
+          {username ? (
             <>
-              <li className="nav-item">
-                <Link className="nav-link" href="/editor">
-                  <i className="ion-compose" />
-                  &nbsp;New Article
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" href="/settings">
-                  <i className="ion-gear-a" />
-                  &nbsp;Settings
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" href={`/profile/${user.username}`}>
-                  {user.image && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={user.image}
-                      className="user-pic"
-                      alt={user.username}
-                    />
-                  )}
-                  {user.username}
-                </Link>
-              </li>
-              <li className="nav-item">
-                <LogoutButton />
-              </li>
+              <NavLink href="/editor">✏️ New Article</NavLink>
+              <NavLink href="/settings">⚙️ Settings</NavLink>
+              <NavLink href={`/profile/${username}`}>{username}</NavLink>
             </>
           ) : (
-            // Navigation déconnectée
             <>
-              <li className="nav-item">
-                <Link className="nav-link" href="/login">
-                  Sign in
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" href="/register">
-                  Sign up
-                </Link>
-              </li>
+              <NavLink href="/login">Sign in</NavLink>
+              <NavLink href="/register">Sign up</NavLink>
             </>
           )}
         </ul>
       </div>
     </nav>
-  );
+  )
+}
+
+// Sous-composant NavLink — réutilisable dans ce fichier
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="px-3 py-2 text-sm text-conduit-gray hover:text-conduit-text rounded transition-colors"
+      >
+        {children}
+      </Link>
+    </li>
+  )
 }
