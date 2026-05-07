@@ -1,3 +1,57 @@
-/* Styles globaux — la CSS de Conduit est chargée depuis le CDN dans layout.tsx */
-/* Ce fichier est intentionnellement minimal */
-@import './conduit.css';
+@import "tailwindcss";
+
+/* ============================================
+   🎨 DESIGN SYSTEM — Conduit Blog
+   Toutes les modifications de design se font ici
+   ============================================ */
+
+@theme {
+  /* --- Couleurs Brand (vert Conduit) --- */
+  --color-brand: #5cb85c;
+  --color-brand-hover: #449d44;
+  --color-brand-light: #eaf5ea;
+
+  /* --- Couleurs UI --- */
+  --color-conduit-gray: #687077;
+  --color-conduit-gray-light: #f3f3f3;
+  --color-conduit-border: #e5e5e5;
+  --color-conduit-text: #373a3c;
+  --color-conduit-muted: #aaa;
+
+  /* --- Danger / Erreurs --- */
+  --color-danger: #b85c5c;
+  --color-danger-hover: #9d4444;
+  --color-danger-light: #f5eaea;
+
+  /* --- Typographie --- */
+  --font-sans: "Source Sans Pro", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Merriweather", Georgia, serif;
+
+  /* --- Spacing personnalisé --- */
+  --spacing-section: 2rem;
+
+  /* --- Border radius --- */
+  --radius-sm: 0.2rem;
+  --radius-md: 0.25rem;
+
+  /* --- Breakpoints (inchangés de Tailwind) --- */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* ============================================
+   🔤 TYPOGRAPHIE DE BASE
+   ============================================ */
+body {
+  font-family: var(--font-sans);
+  color: var(--color-conduit-text);
+  background-color: #fff;
+}
+
+/* Style global des liens de navigation */
+a {
+  color: inherit;
+  text-decoration: none;
+}

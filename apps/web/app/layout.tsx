@@ -1,13 +1,34 @@
-// Root layout — enveloppe toute l'application
-// C'est le seul endroit où <html> et <body> sont définis
-
 import type { Metadata } from 'next';
+import { Merriweather, Source_Sans_3, Titillium_Web } from 'next/font/google';
 import './globals.css';
+
+// ✅ Next.js gère le chargement et l'optimisation des fonts
+const titillium = Titillium_Web({
+  weight: ['700'],
+  subsets: ['latin'],
+  variable: '--font-titillium',
+  display: 'swap',
+});
+
+const sourceSans = Source_Sans_3({
+  weight: ['300', '400', '600', '700'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-source-sans',
+  display: 'swap',
+});
+
+const merriweather = Merriweather({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-merriweather',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
-    default: 'Blog',           // Affiché si la page ne définit pas de titre
-    template: '%s — Anshen Blog',     // Ex: "Mon article — Conduit"
+    default: 'Blog',
+    template: '%s — Anshen Blog',
   },
   description: 'A place to share knowledge. Built with NestJS & Next.js.',
   openGraph: {
@@ -15,7 +36,6 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'fr_FR',
   },
-  // Indique aux moteurs de recherche l'URL canonique du site
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'),
 };
 
@@ -25,18 +45,10 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-<head>
-  <link
-    rel="stylesheet"
-    href="//code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css"
-  />
-  <link
-    rel="stylesheet"
-    href="//fonts.googleapis.com/css?family=Titillium+Web:700|Source+Serif+Pro:400,700|Merriweather+Sans:400,700|Source+Sans+Pro:400,300,600,700,300italic,400italic,600italic,700italic"
-  />
-  <link rel="stylesheet" href="https://demo.realworld.io/main.css" />
-</head>
+    <html
+      lang="en"
+      className={`${titillium.variable} ${sourceSans.variable} ${merriweather.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
