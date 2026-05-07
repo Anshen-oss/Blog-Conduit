@@ -5,6 +5,46 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import type { Metadata } from 'next';
+
+// Type minimal pour l'article — uniquement ce dont on a besoin pour le SEO
+interface ArticleSeoData {
+  title: string;
+  description: string;
+  author: { username: string };
+}
+
+// Next.js appelle generateMetadata avant le rendu de la page
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params;
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/articles/${slug}`,
+      { next: { revalidate: 60 } }  // Cache 60 secondes
+    );
+
+    if (!res.ok) return { title: 'Article introuvable' };
+
+    const { article } = await res.json() as { article: ArticleSeoData };
+
+    return {
+      title: article.title,           // Template → "Mon article — Conduit"
+      description: article.description,
+      openGraph: {
+        title: article.title,
+        description: article.description,
+        type: 'article',
+        authors: [`/profile/${article.author.username}`],
+      },
+    };
+  } catch {
+    return { title: 'Conduit' };    // Fallback en cas d'erreur
+  }
+}
+
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;

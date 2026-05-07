@@ -5,8 +5,18 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Conduit',
-  description: 'A place to share your knowledge.',
+  title: {
+    default: 'Blog',           // Affiché si la page ne définit pas de titre
+    template: '%s — Anshen Blog',     // Ex: "Mon article — Conduit"
+  },
+  description: 'A place to share knowledge. Built with NestJS & Next.js.',
+  openGraph: {
+    siteName: 'Anshen Blog',
+    type: 'website',
+    locale: 'fr_FR',
+  },
+  // Indique aux moteurs de recherche l'URL canonique du site
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3002'),
 };
 
 interface RootLayoutProps {
