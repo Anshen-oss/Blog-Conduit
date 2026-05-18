@@ -1,6 +1,5 @@
 // Page de modification d'article — pré-remplit le formulaire avec les données existantes
 
-
 import { SubmitButton } from '@/components/articles/submit-button';
 import { getArticle } from '@/lib/api';
 import { getAuthToken } from '@/lib/auth';
@@ -25,55 +24,60 @@ export default async function EditEditorPage({ params }: EditEditorPageProps) {
   const updateAction = updateArticleAction.bind(null, slug);
 
   return (
-    <div className="editor-page">
-      <div className="container page">
-        <div className="row">
-          <div className="col-md-10 offset-md-1 col-xs-12">
-            <form action={updateAction}>
-              <fieldset>
-                <fieldset className="form-group">
-                  <input
-                    name="title"
-                    type="text"
-                    className="form-control form-control-lg"
-                    placeholder="Article Title"
-                    defaultValue={article.title}       // Pré-rempli !
-                    required
-                  />
-                </fieldset>
-                <fieldset className="form-group">
-                  <input
-                    name="description"
-                    type="text"
-                    className="form-control"
-                    placeholder="What's this article about?"
-                    defaultValue={article.description}
-                    required
-                  />
-                </fieldset>
-                <fieldset className="form-group">
-                  <textarea
-                    name="body"
-                    className="form-control"
-                    rows={8}
-                    placeholder="Write your article (in markdown)"
-                    defaultValue={article.body}
-                    required
-                  />
-                </fieldset>
-                <fieldset className="form-group">
-                  <input
-                    name="tagList"
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter tags"
-                    defaultValue={article.tagList.join(', ')}
-                  />
-                </fieldset>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex justify-center">
+        <div className="w-full max-w-3xl">
+
+          <form action={updateAction}>
+            <fieldset className="flex flex-col gap-4">
+
+              {/* Titre */}
+              <input
+                name="title"
+                type="text"
+                className="w-full px-6 py-4 text-2xl border border-conduit-border rounded outline-none transition-colors placeholder:text-conduit-muted focus:border-brand focus:ring-1 focus:ring-brand"
+                placeholder="Article Title"
+                defaultValue={article.title}
+                required
+              />
+
+              {/* Description */}
+              <input
+                name="description"
+                type="text"
+                className="w-full px-4 py-3 text-base border border-conduit-border rounded outline-none transition-colors placeholder:text-conduit-muted focus:border-brand focus:ring-1 focus:ring-brand"
+                placeholder="What's this article about?"
+                defaultValue={article.description}
+                required
+              />
+
+              {/* Corps */}
+              <textarea
+                name="body"
+                rows={8}
+                className="w-full px-4 py-3 text-base border border-conduit-border rounded outline-none transition-colors placeholder:text-conduit-muted focus:border-brand focus:ring-1 focus:ring-brand resize-y"
+                placeholder="Write your article (in markdown)"
+                defaultValue={article.body}
+                required
+              />
+
+              {/* Tags */}
+              <input
+                name="tagList"
+                type="text"
+                className="w-full px-4 py-3 text-base border border-conduit-border rounded outline-none transition-colors placeholder:text-conduit-muted focus:border-brand focus:ring-1 focus:ring-brand"
+                placeholder="Enter tags"
+                defaultValue={article.tagList.join(', ')}
+              />
+
+              {/* Bouton submit aligné à droite */}
+              <div className="flex justify-end">
                 <SubmitButton label="Update Article" />
-              </fieldset>
-            </form>
-          </div>
+              </div>
+
+            </fieldset>
+          </form>
+
         </div>
       </div>
     </div>

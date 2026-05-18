@@ -3,18 +3,20 @@
 import { loginAction } from '@/actions/auth.actions'
 import { useActionState } from 'react'
 
+const inputClass = 'w-full px-4 py-3 text-base border border-conduit-border rounded outline-none transition-colors placeholder:text-conduit-muted focus:border-brand focus:ring-1 focus:ring-brand disabled:opacity-60'
+
 export function LoginForm() {
-  // useActionState : gère l'état pending + les erreurs renvoyées par l'action
   const [state, formAction, isPending] = useActionState(loginAction, {})
 
   return (
-    <form action={formAction}>
-      {/* Erreurs globales (ex: "email or password is invalid") */}
+    <form action={formAction} className="flex flex-col gap-4">
+
+      {/* Erreurs globales */}
       {state.errors && (
-        <ul className="error-messages">
+        <ul className="bg-danger-light border border-danger rounded px-4 py-3">
           {Object.entries(state.errors).map(([field, messages]) =>
             messages.map((message) => (
-              <li key={`${field}-${message}`}>
+              <li key={`${field}-${message}`} className="text-sm text-danger">
                 {field && field !== '' ? `${field} ` : ''}{message}
               </li>
             ))
@@ -22,35 +24,34 @@ export function LoginForm() {
         </ul>
       )}
 
-      <fieldset className="form-group">
-        <input
-          className="form-control form-control-lg"
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          disabled={isPending}
-        />
-      </fieldset>
-
-      <fieldset className="form-group">
-        <input
-          className="form-control form-control-lg"
-          type="password"
-          name="password"
-          placeholder="Password"
-          required
-          disabled={isPending}
-        />
-      </fieldset>
-
-      <button
-        className="btn btn-lg btn-primary pull-xs-right"
-        type="submit"
+      <input
+        className={inputClass}
+        type="email"
+        name="email"
+        placeholder="Email"
+        required
         disabled={isPending}
-      >
-        {isPending ? 'Signing in...' : 'Sign in'}
-      </button>
+      />
+
+      <input
+        className={inputClass}
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+        disabled={isPending}
+      />
+
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="px-6 py-3 text-lg font-semibold bg-brand text-white rounded hover:bg-brand-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isPending ? 'Signing in...' : 'Sign in'}
+        </button>
+      </div>
+
     </form>
   )
 }

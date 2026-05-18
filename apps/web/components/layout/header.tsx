@@ -9,83 +9,81 @@ import type { User } from '@/types';
 import Link from 'next/link';
 
 export async function Header() {
-  // On récupère l'utilisateur courant côté serveur pour afficher
-  // les bons liens (connecté vs déconnecté)
   const token = await getAuthToken();
   let user: User | null = null;
 
-if (token) {
-  try {
-    const data = await getCurrentUser(token) as { user: User }// ← ajoute cette ligne
-    user = data.user
-  } catch {
-    user = null
+  if (token) {
+    try {
+      const data = await getCurrentUser(token) as { user: User }
+      user = data.user
+    } catch {
+      user = null
+    }
   }
-}
 
   return (
-    <nav className="navbar navbar-light">
-      <div className="container">
-        {/* Logo Conduit — lien vers l'accueil */}
-        <Link className="navbar-brand" href="/">
+    <nav className="border-b border-conduit-border bg-white">
+      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+
+        {/* Logo */}
+        <Link className="text-brand font-bold text-xl tracking-tight hover:text-brand-hover transition-colors" href="/">
           Blog Anshen
         </Link>
 
-        <ul className="nav navbar-nav pull-xs-right">
-          <li className="nav-item">
-            <Link className="nav-link" href="/">
+        <ul className="flex items-center gap-1">
+          <li>
+            <Link className="px-3 py-2 text-sm text-conduit-gray hover:text-conduit-text transition-colors" href="/">
               Home
             </Link>
           </li>
 
           {user ? (
-            // Navigation connectée
             <>
-              <li className="nav-item">
-                <Link className="nav-link" href="/editor">
+              <li>
+                <Link className="px-3 py-2 text-sm text-conduit-gray hover:text-conduit-text transition-colors" href="/editor">
                   <i className="ion-compose" />
                   &nbsp;New Article
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" href="/settings">
+              <li>
+                <Link className="px-3 py-2 text-sm text-conduit-gray hover:text-conduit-text transition-colors" href="/settings">
                   <i className="ion-gear-a" />
                   &nbsp;Settings
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" href={`/profile/${user.username}`}>
+              <li>
+                <Link className="px-3 py-2 text-sm text-conduit-gray hover:text-conduit-text transition-colors flex items-center gap-2" href={`/profile/${user.username}`}>
                   {user.image && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={user.image}
-                      className="user-pic"
+                      className="w-6 h-6 rounded-full object-cover"
                       alt={user.username}
                     />
                   )}
                   {user.username}
                 </Link>
               </li>
-              <li className="nav-item">
+              <li>
                 <LogoutButton />
               </li>
             </>
           ) : (
-            // Navigation déconnectée
             <>
-              <li className="nav-item">
-                <Link className="nav-link" href="/login">
+              <li>
+                <Link className="px-3 py-2 text-sm text-conduit-gray hover:text-conduit-text transition-colors" href="/login">
                   Sign in
                 </Link>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" href="/register">
+              <li>
+                <Link className="px-3 py-2 text-sm text-conduit-gray hover:text-conduit-text transition-colors" href="/register">
                   Sign up
                 </Link>
               </li>
             </>
           )}
         </ul>
+
       </div>
     </nav>
   );

@@ -1,20 +1,19 @@
 import { DeleteArticleButton } from '@/components/articles/delete-article-button';
 import { getArticle, getComments, getCurrentUser } from '@/lib/api';
 import { getAuthToken } from '@/lib/auth';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { FavoriteButton } from '@/components/articles/favorite-button';
+import { Avatar } from '@/components/ui/avatar';
 import type { Metadata } from 'next';
 
-// Type minimal pour l'article — uniquement ce dont on a besoin pour le SEO
 interface ArticleSeoData {
   title: string;
   description: string;
   author: { username: string };
 }
 
-// Next.js appelle generateMetadata avant le rendu de la page
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -23,7 +22,7 @@ export async function generateMetadata(
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/articles/${slug}`,
-      { next: { revalidate: 60 } }  // Cache 60 secondes
+      { next: { revalidate: 60 } }
     );
 
     if (!res.ok) return { title: 'Article introuvable' };
@@ -31,7 +30,7 @@ export async function generateMetadata(
     const { article } = await res.json() as { article: ArticleSeoData };
 
     return {
-      title: article.title,           // Template → "Mon article — Conduit"
+      title: article.title,
       description: article.description,
       openGraph: {
         title: article.title,
@@ -41,10 +40,9 @@ export async function generateMetadata(
       },
     };
   } catch {
-    return { title: 'Conduit' };    // Fallback en cas d'erreur
+    return { title: 'Conduit' };
   }
 }
-
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -53,17 +51,14 @@ interface ArticlePageProps {
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
 
-  // Lire le cookie JWT
-const token = await getAuthToken();
+  const token = await getAuthToken();
 
-  // Fetch article + commentaires + user courant en parallèle
-const [articleData, commentsData, currentUser] = await Promise.all([
+  const [articleData, commentsData, currentUser] = await Promise.all([
     getArticle(slug).catch((err) => { console.log('ARTICLE ERROR:', err); return null; }),
     getComments(slug).catch(() => ({ comments: [] })),
     token ? getCurrentUser(token).catch(() => null) : null,
   ]);
 
-  // Si l'article n'existe pas → page 404
   if (!articleData) notFound();
 
   const { article } = articleData;
@@ -75,75 +70,79 @@ const [articleData, commentsData, currentUser] = await Promise.all([
   });
 
   return (
-    <div className="article-page">
-      {/* Header sombre avec titre */}
-      <div className="banner">
-        <div className="container">
-          <h1>{article.title}</h1>
+    <div>
+      {/* Banner sombre avec titre */}
+      <div className="bg-stone-800 text-white py-10 shadow-md">
+        <div className="max-w-7xl mx-auto px-4">
+          <h1 className="text-4xl font-bold mb-6">{article.title}</h1>
 
-          <div className="article-meta">
+          <div className="flex items-center gap-4">
             <Link href={`/profile/${article.author.username}`}>
-              <Image
-                src={article.author.image ?? 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
-                alt={article.author.username}
-                width={32}
-                height={32}
-              />
+              <Avatar src={article.author.image} username={article.author.username} size={36} />
             </Link>
-            <div className="info">
-              <Link href={`/profile/${article.author.username}`} className="author">
+            <div className="flex flex-col">
+              <Link href={`/profile/${article.author.username}`} className="text-brand font-medium text-sm hover:underline">
                 {article.author.username}
               </Link>
-              <span className="date">{date}</span>
+              <span className="text-xs text-stone-400">{date}</span>
             </div>
 
             {/* Boutons éditer/supprimer — visibles uniquement pour l'auteur */}
             {isAuthor && (
-              <>
+              <div className="flex items-center gap-2 ml-4">
                 <Link
                   href={`/editor/${article.slug}`}
-                  className="btn btn-sm btn-outline-secondary"
+                  className="px-3 py-1 text-sm border border-stone-400 text-stone-300 rounded hover:border-white hover:text-white transition-colors"
                 >
                   <i className="ion-edit" /> Modifier
                 </Link>
-                {' '}
-                {/* Client Component pour la confirmation de suppression */}
                 <DeleteArticleButton slug={article.slug} />
-              </>
+              </div>
+            )}
+            {/* Après le bloc isAuthor, dans le banner */}
+            {token && !isAuthor && (
+              <FavoriteButton
+                slug={article.slug}
+                favoritesCount={article.favoritesCount}
+                favorited={article.favorited}
+                token={token}
+              />
             )}
           </div>
         </div>
       </div>
 
       {/* Corps de l'article */}
-      <div className="container page">
-        <div className="row article-content">
-          <div className="col-md-12">
-            <p>{article.body}</p>
-            <ul className="tag-list">
-              {article.tagList.map((tag) => (
-                <li key={tag} className="tag-default tag-pill tag-outline">
-                  {tag}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="max-w-3xl mx-auto">
 
-        <hr />
+          {/* Texte */}
+          <p className="text-conduit-text text-lg leading-relaxed whitespace-pre-wrap mb-6">
+            {article.body}
+          </p>
 
-        {/* Section commentaires */}
-        <div className="row">
-          <div className="col-xs-12 col-md-8 offset-md-2">
+          {/* Tags */}
+          <ul className="flex flex-wrap gap-2 mb-8">
+            {article.tagList.map((tag) => (
+              <li key={tag} className="px-3 py-0.5 text-sm border border-conduit-border text-conduit-gray rounded-full">
+                {tag}
+              </li>
+            ))}
+          </ul>
+
+          <hr className="border-conduit-border mb-8" />
+
+          {/* Section commentaires */}
+          <div className="flex flex-col gap-4">
             {comments.map((comment) => (
-              <div key={comment.id} className="card">
-                <div className="card-block">
-                  <p className="card-text">{comment.body}</p>
+              <div key={comment.id} className="border border-conduit-border rounded overflow-hidden">
+                <div className="px-4 py-3">
+                  <p className="text-conduit-text text-sm">{comment.body}</p>
                 </div>
-                <div className="card-footer">
+                <div className="px-4 py-2 bg-conduit-gray-light border-t border-conduit-border">
                   <Link
                     href={`/profile/${comment.author.username}`}
-                    className="comment-author"
+                    className="text-sm text-brand font-medium hover:underline"
                   >
                     {comment.author.username}
                   </Link>
@@ -152,11 +151,13 @@ const [articleData, commentsData, currentUser] = await Promise.all([
             ))}
 
             {!token && (
-              <p>
-                <Link href="/login">Connecte-toi</Link> pour laisser un commentaire.
+              <p className="text-sm text-conduit-gray">
+                <Link href="/login" className="text-brand hover:underline">Connecte-toi</Link>
+                {' '}pour laisser un commentaire.
               </p>
             )}
           </div>
+
         </div>
       </div>
     </div>

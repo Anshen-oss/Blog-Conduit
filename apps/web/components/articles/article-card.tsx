@@ -1,8 +1,8 @@
 // Server Component — pas de 'use client' nécessaire
 // Affiche un article en mode résumé (sans le body complet)
 
+import { Avatar } from '@/components/ui/avatar';
 import type { Article } from '@/types';
-import Image from 'next/image';
 import Link from 'next/link';
 
 interface ArticleCardProps {
@@ -17,43 +17,50 @@ export function ArticleCard({ article }: ArticleCardProps) {
   });
 
   return (
-    <div className="article-preview">
+    <div className="border-t border-conduit-border py-6">
+
       {/* Ligne du haut : avatar + auteur + date + bouton favori */}
-      <div className="article-meta">
-        <Link href={`/profile/${article.author.username}`}>
-          <Image
-            src={article.author.image ?? 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
-            alt={article.author.username}
-            width={32}
-            height={32}
-          />
-        </Link>
-        <div className="info">
-          <Link href={`/profile/${article.author.username}`} className="author">
-            {article.author.username}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Link href={`/profile/${article.author.username}`}>
+            <Avatar src={article.author.image} username={article.author.username} size={32} />
           </Link>
-          <span className="date">{date}</span>
+          <div className="flex flex-col">
+            <Link href={`/profile/${article.author.username}`} className="text-brand font-medium text-sm hover:underline">
+              {article.author.username}
+            </Link>
+            <span className="text-xs text-conduit-muted">{date}</span>
+          </div>
         </div>
+
         {/* Compteur de favoris — bouton passif pour l'instant */}
-        <span className="btn btn-outline-primary btn-sm pull-xs-right">
+        <span className="inline-flex items-center gap-1 px-3 py-1 text-sm border border-brand text-brand rounded hover:bg-brand hover:text-white transition-colors cursor-default">
           <i className="ion-heart" /> {article.favoritesCount}
         </span>
       </div>
 
       {/* Lien vers l'article complet */}
-      <Link href={`/article/${article.slug}`} className="preview-link">
-        <h1>{article.title}</h1>
-        <p>{article.description}</p>
-        <span>Lire la suite...</span>
-        {/* Tags de l'article */}
-        <ul className="tag-list">
-          {article.tagList.map((tag) => (
-            <li key={tag} className="tag-default tag-pill tag-outline">
-              {tag}
-            </li>
-          ))}
-        </ul>
+      <Link href={`/article/${article.slug}`} className="block group">
+        <h1 className="text-2xl font-bold text-conduit-text mb-1 group-hover:text-brand transition-colors">
+          {article.title}
+        </h1>
+        <p className="text-conduit-gray text-sm mb-4 line-clamp-2">
+          {article.description}
+        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-conduit-muted">Lire la suite...</span>
+
+          {/* Tags de l'article */}
+          <ul className="flex flex-wrap gap-1 justify-end">
+            {article.tagList.map((tag) => (
+              <li key={tag} className="px-2 py-0.5 text-xs border border-conduit-border text-conduit-gray rounded-sm">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        </div>
       </Link>
+
     </div>
   );
 }
