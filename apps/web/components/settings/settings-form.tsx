@@ -13,11 +13,9 @@ interface Props {
   };
 }
 
+const inputClass = 'w-full px-4 py-3 text-base border border-conduit-border rounded outline-none transition-colors placeholder:text-conduit-muted focus:border-brand focus:ring-1 focus:ring-brand'
+
 export function SettingsForm({ user }: Props) {
-  // useActionState : wraps la Server Action avec gestion d'état automatique
-  // state    → résultat retourné par updateUser (success, error)
-  // action   → fonction à passer au <form action={...}>
-  // isPending → true pendant l'appel réseau
   const [state, action, isPending] = useActionState<UpdateUserState | null, FormData>(
     updateUser,
     null,
@@ -27,92 +25,88 @@ export function SettingsForm({ user }: Props) {
     <>
       {/* Message d'erreur */}
       {state?.error && (
-        <ul className="error-messages">
-          <li>{state.error}</li>
+        <ul className="bg-danger-light border border-danger rounded px-4 py-3 mb-4">
+          <li className="text-sm text-danger">{state.error}</li>
         </ul>
       )}
 
       {/* Message de succès */}
       {state?.success && (
-        <p className="text-success">✅ Profil mis à jour avec succès !</p>
+        <p className="text-sm text-brand mb-4">✅ Profil mis à jour avec succès !</p>
       )}
 
-      {/* Le formulaire utilise action= (pas onSubmit=) pour les Server Actions */}
       <form action={action}>
-        {/* Image URL */}
-        <fieldset>
-          <fieldset className="form-group">
-            <input
-              name="image"
-              className="form-control"
-              type="url"
-              placeholder="URL of profile picture"
-              defaultValue={user.image ?? ''}
-            />
-          </fieldset>
+        <fieldset className="flex flex-col gap-4">
+
+          {/* Image URL */}
+          <input
+            name="image"
+            type="url"
+            className={inputClass}
+            placeholder="URL of profile picture"
+            defaultValue={user.image ?? ''}
+          />
 
           {/* Username */}
-          <fieldset className="form-group">
-            <input
-              name="username"
-              className="form-control form-control-lg"
-              type="text"
-              placeholder="Your Name"
-              defaultValue={user.username}
-              required
-            />
-          </fieldset>
+          <input
+            name="username"
+            type="text"
+            className={inputClass}
+            placeholder="Your Name"
+            defaultValue={user.username}
+            required
+          />
 
           {/* Bio */}
-          <fieldset className="form-group">
-            <textarea
-              name="bio"
-              className="form-control form-control-lg"
-              rows={8}
-              placeholder="Short bio about you"
-              defaultValue={user.bio ?? ''}
-            />
-          </fieldset>
+          <textarea
+            name="bio"
+            rows={8}
+            className={`${inputClass} resize-y`}
+            placeholder="Short bio about you"
+            defaultValue={user.bio ?? ''}
+          />
 
           {/* Email */}
-          <fieldset className="form-group">
-            <input
-              name="email"
-              className="form-control form-control-lg"
-              type="email"
-              placeholder="Email"
-              defaultValue={user.email}
-              required
-            />
-          </fieldset>
+          <input
+            name="email"
+            type="email"
+            className={inputClass}
+            placeholder="Email"
+            defaultValue={user.email}
+            required
+          />
 
-          {/* Nouveau mot de passe (optionnel) */}
-          <fieldset className="form-group">
-            <input
-              name="password"
-              className="form-control form-control-lg"
-              type="password"
-              placeholder="New Password (leave blank to keep current)"
-            />
-          </fieldset>
+          {/* Nouveau mot de passe */}
+          <input
+            name="password"
+            type="password"
+            className={inputClass}
+            placeholder="New Password (leave blank to keep current)"
+          />
 
-          {/* Bouton Submit — désactivé pendant l'appel */}
-          <button
-            className="btn btn-lg btn-primary pull-xs-right"
-            type="submit"
-            disabled={isPending}
-          >
-            {isPending ? 'Updating...' : 'Update Settings'}
-          </button>
+          {/* Bouton Submit */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="px-6 py-3 text-lg font-semibold bg-brand text-white rounded hover:bg-brand-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isPending ? 'Updating...' : 'Update Settings'}
+            </button>
+          </div>
+
         </fieldset>
       </form>
 
       {/* Séparateur */}
-      <hr />
+      <hr className="border-conduit-border my-6" />
 
-      {/* Bouton Logout — appelle la Server Action logout directement */}
+      {/* Bouton Logout */}
       <form action={logoutAction}>
-        <button className="btn btn-outline-danger" type="submit">
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm border border-danger text-danger rounded hover:bg-danger hover:text-white transition-colors"
+        >
           Or click here to logout.
         </button>
       </form>
