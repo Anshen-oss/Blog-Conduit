@@ -7,9 +7,9 @@ export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(registerAction, {})
 
   return (
-    <form action={formAction}>
+    <form action={formAction} className="space-y-4">
       {state.errors && (
-        <ul className="error-messages">
+        <ul className="p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm space-y-1">
           {Object.entries(state.errors).map(([field, messages]) =>
             messages.map((message) => (
               <li key={`${field}-${message}`}>
@@ -20,41 +20,35 @@ export function RegisterForm() {
         </ul>
       )}
 
-      <fieldset className="form-group">
-        <input
-          className="form-control form-control-lg"
-          type="text"
-          name="username"
-          placeholder="Your Name"
-          required
-          disabled={isPending}
-        />
-      </fieldset>
+      <input
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        type="text"
+        name="username"
+        placeholder="Your Name"
+        required
+        disabled={isPending}
+      />
 
-      <fieldset className="form-group">
-        <input
-          className="form-control form-control-lg"
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          disabled={isPending}
-        />
-      </fieldset>
+      <input
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        type="email"
+        name="email"
+        placeholder="Email"
+        required
+        disabled={isPending}
+      />
 
-      <fieldset className="form-group">
-        <input
-          className="form-control form-control-lg"
-          type="password"
-          name="password"
-          placeholder="Password"
-          required
-          disabled={isPending}
-        />
-      </fieldset>
+      <input
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+        disabled={isPending}
+      />
 
       <button
-        className="btn btn-lg btn-primary pull-xs-right"
+        className="w-full py-2 px-4 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
         type="submit"
         disabled={isPending}
       >

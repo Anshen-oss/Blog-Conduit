@@ -21,6 +21,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt  // mis à jour automatiquement par Prisma
 
+  // 👇 Nouveaux champs pour le reset de mot de passe
+  resetPasswordToken   String?   // token hashé
+  resetPasswordExpires DateTime? // date d'expiration
+
   // Relations (champs virtuels — non stockés en base)
   articles  Article[]
   comments  Comment[]

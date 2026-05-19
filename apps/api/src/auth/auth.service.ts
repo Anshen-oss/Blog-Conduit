@@ -1,13 +1,17 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 // Type retourné par les méthodes — sans le champ password
 interface UserResponse {
@@ -21,9 +25,12 @@ interface UserResponse {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name); // 👈 ajouter
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async register(dto: RegisterDto): Promise<UserResponse> {
@@ -90,7 +97,10 @@ export class AuthService {
     image: string | null;
   }): UserResponse {
     // Signer le JWT avec le payload minimal
-    const token = this.jwtService.sign({ sub: user.id, username: user.username });
+    const token = this.jwtService.sign({
+      sub: user.id,
+      username: user.username,
+    });
 
     return {
       id: user.id,
@@ -100,5 +110,76 @@ export class AuthService {
       image: user.image,
       token, // inclus dans la réponse ET dans le cookie
     };
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    // 1. Chercher l'utilisateur (sans révéler s'il existe ou non)
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Sécurité : on ne dit JAMAIS si l'email existe
+      this.logger.log(`Reset demandé pour email inconnu : ${email}`);
+      return;
+    }
+
+    // 2. Générer le token brut (64 caractères hex)
+    const rawToken = crypto.randomBytes(32).toString('hex');
+
+    // 3. Hasher le token avant de le stocker
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+
+    // 4. Stocker le hash + expiration (1 heure)
+    await this.prisma.user.update({
+      where: { email },
+      data: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    // 5. Construire l'URL de reset avec le token BRUT
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+
+    // 6. Envoyer l'email
+    await this.mailService.sendPasswordReset(email, resetUrl);
+    this.logger.log(`Token de reset généré pour ${email}`);
+  }
+
+  async resetPassword(rawToken: string, newPassword: string): Promise<void> {
+    // 1. Hasher le token reçu pour le comparer à celui en base
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+
+    // 2. Chercher l'utilisateur avec ce token et vérifier l'expiration
+    const user = await this.prisma.user.findFirst({
+      where: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { gt: new Date() }, // gt = greater than = pas encore expiré
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+
+    // 3. Hasher le nouveau mot de passe
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 4. Mettre à jour le mot de passe ET invalider le token
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null, // Token invalidé
+        resetPasswordExpires: null, // Date invalidée
+      },
+    });
+
+    this.logger.log(`Mot de passe réinitialisé pour userId: ${user.id}`);
   }
 }
