@@ -1,11 +1,20 @@
-import { type Metadata } from 'next'
-import { LoginForm } from './login-form'
+import { type Metadata } from 'next';
+import { LoginForm } from './login-form';
 
 export const metadata: Metadata = {
   title: 'Sign In',
 }
 
-export default function LoginPage() {
+interface Props {
+  searchParams: Promise<{ reset?: string }>;
+}
+
+interface Props {
+  searchParams: Promise<{ reset?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: Props) {
+  const { reset } = await searchParams;
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -18,8 +27,12 @@ export default function LoginPage() {
                 Need an account?
               </a>
             </p>
-
-            <LoginForm />
+            {reset === 'success' && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
+                    ✅ Mot de passe réinitialisé ! Tu peux te connecter.
+              </div>
+           )}
+          <LoginForm />
 
           </div>
         </div>

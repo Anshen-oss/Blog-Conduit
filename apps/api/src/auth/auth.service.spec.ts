@@ -1,9 +1,16 @@
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
+import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
+
+jest.mock('../mail/mail.service');
 
 // On mock PrismaService pour ne pas toucher à la vraie base de données
 const mockPrismaService = {
@@ -12,6 +19,7 @@ const mockPrismaService = {
     findUnique: jest.fn(),
     findUniqueOrThrow: jest.fn(),
     create: jest.fn(),
+    update: jest.fn(),
   },
 };
 
@@ -20,19 +28,29 @@ const mockJwtService = {
   sign: jest.fn().mockReturnValue('mocked-jwt-token'),
 };
 
+const mockMailService = {
+  sendPasswordReset: jest.fn().mockResolvedValue(undefined), // 👈 ajouter
+};
+
 describe('AuthService', () => {
-  let service: AuthService;
+  let mailService: jest.Mocked<MailService>;
+  let service: AuthService; // 👈 déjà ajouté
+  let prisma: typeof mockPrismaService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: MailService, useValue: mockMailService },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    mailService = module.get<MailService>(MailService);
+    prisma = module.get(PrismaService);
 
     // Réinitialiser tous les mocks avant chaque test
     jest.clearAllMocks();
@@ -116,7 +134,10 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.login({ email: 'inconnu@example.com', password: 'password123' }),
+        service.login({
+          email: 'inconnu@example.com',
+          password: 'password123',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -132,8 +153,85 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.login({ email: 'test@example.com', password: 'wrong-password' }),
+        service.login({
+          email: 'test@example.com',
+          password: 'wrong-password',
+        }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it("devrait générer un token et appeler mailService si l'email existe", async () => {
+      // Arrange
+      const mockUser = { id: '1', email: 'test@test.com', username: 'test' };
+      prisma.user.findUnique.mockResolvedValue(mockUser as any);
+      prisma.user.update.mockResolvedValue(mockUser as any);
+      const sendMailSpy = jest
+        .spyOn(mailService, 'sendPasswordReset')
+        .mockResolvedValue();
+
+      // Act
+      await service.forgotPassword('test@test.com');
+
+      // Assert
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { email: 'test@test.com' },
+          data: expect.objectContaining({
+            resetPasswordToken: expect.any(String),
+            resetPasswordExpires: expect.any(Date),
+          }),
+        }),
+      );
+      expect(sendMailSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("devrait retourner silencieusement si l'email n'existe pas", async () => {
+      // Arrange
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      // Act & Assert — pas d'erreur thrown
+      await expect(
+        service.forgotPassword('inconnu@test.com'),
+      ).resolves.toBeUndefined();
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('devrait hasher le nouveau mot de passe et invalider le token', async () => {
+      // Arrange
+      const mockUser = { id: '1', email: 'test@test.com' };
+      prisma.user.findFirst.mockResolvedValue(mockUser as any);
+      prisma.user.update.mockResolvedValue(mockUser as any);
+
+      // Act
+      await service.resetPassword('rawtoken123', 'newpassword');
+
+      // Assert
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: '1' },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          data: expect.objectContaining({
+            resetPasswordToken: null,
+            resetPasswordExpires: null,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            password: expect.any(String), // hashé
+          }),
+        }),
+      );
+    });
+
+    it('devrait throw BadRequestException si le token est invalide', async () => {
+      // Arrange
+      prisma.user.findFirst.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.resetPassword('invalid-token', 'newpass'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

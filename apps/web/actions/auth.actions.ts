@@ -58,3 +58,37 @@ export async function logoutAction(): Promise<void> {
   await deleteAuthCookie()
   redirect('/')
 }
+
+
+export async function forgotPasswordAction(formData: FormData) {
+  const email = formData.get('email') as string;
+
+  const res = await fetch(`${process.env.API_URL}/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!res.ok) {
+    // On affiche quand même un message de succès (sécurité)
+  }
+
+  redirect('/forgot-password/success');
+}
+
+export async function resetPasswordAction(formData: FormData) {
+  const token = formData.get('token') as string;
+  const password = formData.get('password') as string;
+
+  const res = await fetch(`${process.env.API_URL}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, password }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Token invalide ou expiré.');
+  }
+
+  redirect('/login?reset=success');
+}
