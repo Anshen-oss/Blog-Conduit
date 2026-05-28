@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* ============================================
    🎨 DESIGN SYSTEM — Conduit Blog
@@ -54,4 +55,17 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Dans globals.css, ajouter après le reset */
+.prose h2 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  margin: 1rem 0 !important;
+}
+
+.prose h3 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin: 0.75rem 0 !important;
 }

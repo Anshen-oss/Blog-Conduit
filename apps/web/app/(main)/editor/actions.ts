@@ -5,7 +5,10 @@ import { redirect } from 'next/navigation';
 
 // ─── Créer un article ─────────────────────────────────────────────────────────
 
-export async function createArticleAction(formData: FormData) {
+export async function createArticleAction(
+  _prevState: { error: string } | null,   // état précédent (on ne l'utilise pas)
+  formData: FormData
+): Promise<{ error: string } | null> {
   const token = await getAuthToken();
 
   if (!token) redirect('/login');  // Protection : non connecté → login
@@ -43,15 +46,18 @@ export async function createArticleAction(formData: FormData) {
 
 // ─── Modifier un article ──────────────────────────────────────────────────────
 
-export async function updateArticleAction(slug: string, formData: FormData) {
-   const token = await getAuthToken();
-
-  if (!token) redirect('/login');
+export async function updateArticleAction(
+  slug: string,                              // ← reçu via .bind(null, slug)
+  _prevState: { error: string } | null,
+  formData: FormData
+): Promise<{ error: string } | null> {
+  const token = await getAuthToken()
+  if (!token) redirect('/login')
 
   const tagList = (formData.get('tagList') as string)
     .split(',')
     .map((t) => t.trim())
-    .filter(Boolean);
+    .filter(Boolean)
 
   const res = await fetch(`${process.env.API_URL}/articles/${slug}`, {
     method: 'PUT',
@@ -67,16 +73,14 @@ export async function updateArticleAction(slug: string, formData: FormData) {
         tagList,
       },
     }),
+  })
 
-  });
-if (!res.ok) {
-  const err = await res.json();
-  console.log('UPDATE ERROR:', err);
-  redirect('/');
-}
+  if (!res.ok) {
+    return { error: 'Erreur lors de la mise à jour de l\'article' }  // ← retourner l'erreur
+  }
 
-  const data = await res.json() as { article: { slug: string } };
-  redirect(`/article/${data.article.slug}`);
+  const data = await res.json() as { article: { slug: string } }
+  redirect(`/article/${data.article.slug}`)
 }
 
 export async function deleteArticleAction(slug: string) {

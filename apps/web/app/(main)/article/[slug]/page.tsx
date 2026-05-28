@@ -117,9 +117,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <div className="max-w-3xl mx-auto">
 
           {/* Texte */}
-          <p className="text-conduit-text text-lg leading-relaxed whitespace-pre-wrap mb-6">
-            {article.body}
-          </p>
+          <div
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: article.body }}
+          />
 
           {/* Tags */}
           <ul className="flex flex-wrap gap-2 mb-8">

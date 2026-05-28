@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "multer"],
     "ignoreDeprecations": "5.0"
   },
   "include": ["src/**/*"],
