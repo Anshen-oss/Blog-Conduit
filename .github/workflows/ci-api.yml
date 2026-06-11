@@ -1,0 +1,60 @@
+name: CI — Backend API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'           # Déclenché seulement si l'API a changé
+      - 'pnpm-lock.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'pnpm-lock.yaml'
+
+jobs:
+  test:
+    name: Tests unitaires NestJS
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Récupérer le code source
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Installer pnpm (le package manager du monorepo)
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # 3. Installer Node.js avec cache pnpm activé
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # 4. Installer les dépendances du monorepo entier
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 5. Lancer les tests unitaires du backend
+      - name: Run API unit tests
+        run: pnpm test --filter=@conduit/api
+        env:
+          # Variables nécessaires pour que NestJS démarre
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN: "7d"
+          # Variables S3/Tigris pour les tests upload
+          TIGRIS_ACCESS_KEY_ID: ${{ secrets.TIGRIS_ACCESS_KEY_ID }}
+          TIGRIS_SECRET_ACCESS_KEY: ${{ secrets.TIGRIS_SECRET_ACCESS_KEY }}
+          TIGRIS_BUCKET_NAME: conduit-blog-uploads
+          TIGRIS_ENDPOINT: https://fly.storage.tigris.dev
+          # Variables mail pour les tests reset password
+          MAIL_HOST: smtp.mailtrap.io
+          MAIL_PORT: "2525"
+          SMTP_USER: ${{ secrets.MAIL_USER }}
+          SMTP_PASS: ${{ secrets.MAIL_PASS }}
+          SMTP_FROM: noreply@conduit.dev
