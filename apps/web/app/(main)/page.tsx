@@ -4,7 +4,10 @@
 import { ArticleCard } from '@/components/articles/article-card';
 import { getArticles, getArticlesFeed, getTags } from '@/lib/api';
 import { getAuthToken } from '@/lib/auth';
+import { Article } from '@/types';
 import Link from 'next/link';
+
+
 
 interface HomePageProps {
   searchParams: Promise<{
@@ -31,12 +34,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const token = await getAuthToken();
 
-  const [articlesData, tagsData] = await Promise.all([
-    feed && token
-      ? getArticlesFeed(token, { limit, offset })
-      : getArticles({ ...(tag && { tag }), limit, offset }),
-    getTags(),
-  ]);
+const [articlesData, tagsData] = await Promise.all([
+  feed && token
+    ? getArticlesFeed(token, { limit, offset })
+    : getArticles({ ...(tag && { tag }), limit, offset }),
+  getTags(),
+]) as [{ articles: Article[]; articlesCount: number }, { tags: string[] }];
 
   const { articles, articlesCount } = articlesData;
   const totalPages = Math.ceil(articlesCount / limit);
