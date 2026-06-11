@@ -4,14 +4,14 @@ on:
   push:
     branches: [main]
     paths:
-      - 'apps/web/**'           # Déclenché seulement si le frontend a changé
+      - 'apps/web/**'
       - 'pnpm-lock.yaml'
   pull_request:
     branches: [main]
     paths:
       - 'apps/web/**'
       - 'pnpm-lock.yaml'
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,8 +24,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
@@ -36,16 +34,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Vérification TypeScript stricte + lint
       - name: Type check
         run: pnpm --filter=@conduit/web exec tsc --noEmit
 
-      # Build de production complet
       - name: Build
         run: pnpm build --filter=@conduit/web
         env:
-          # Next.js a besoin de l'URL de l'API au build time
           NEXT_PUBLIC_API_URL: http://localhost:3001/api
           NEXT_PUBLIC_APP_URL: http://localhost:3002
-          # Valeur fictive — seulement pour que le build ne plante pas
           NEXT_PUBLIC_LMS_URL: https://lms.example.com
